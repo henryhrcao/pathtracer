@@ -1,5 +1,6 @@
 import torch
 from rays import *
+from sphere import *
 import os
 def write_color(output, colour):
     r = colour[0];
@@ -29,6 +30,9 @@ def main():
     topLeft = cameraOrigin - torch.tensor([0,0,focalLength]) - u/2 -v/2
     topLeftPixel = topLeft + 0.5*(deltaU+deltaV)
     pixelTensor = torch.empty(height,width,3)
+    sphere1 = Sphere(torch.tensor([0,0,-1],device = device),0.5)
+    sphere2 = Sphere(torch.tensor([0.5,0.5,-1],device = device),0.25)
+    objectList = [sphere1,sphere2]
     for i in range(height):
         for j in range(width):
             currentPixel = topLeftPixel + (i*deltaV) + (j*deltaU)
@@ -36,7 +40,7 @@ def main():
     cameraOrigin = cameraOrigin.to(device)     
     pixelTensor = pixelTensor.to(device)
     rayTensor = pixelTensor - cameraOrigin
-    colourTensor = colour(rayTensor,device)
+    colourTensor = colour(rayTensor,device,cameraOrigin, objectList)
     img = (colourTensor.clamp(0,1) * 255).to(torch.uint8).cpu()
     with open("output/image.ppm", "w") as f:
         f.write(f"P3\n{width} {height}\n255\n")
