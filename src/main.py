@@ -37,10 +37,12 @@ def main():
         for j in range(width):
             currentPixel = topLeftPixel + (i*deltaV) + (j*deltaU)
             pixelTensor[i, j] = currentPixel    
-    cameraOrigin = cameraOrigin.to(device)     
+    cameraOrigin = cameraOrigin.to(device)    
     pixelTensor = pixelTensor.to(device)
+    originTensor = torch.empty_like(pixelTensor) 
+    originTensor[:] = cameraOrigin
     rayTensor = pixelTensor - cameraOrigin
-    colourTensor = colour(rayTensor,device,cameraOrigin, objectList)
+    colourTensor = colour(rayTensor,device,originTensor, objectList)
     img = (colourTensor.clamp(0,1) * 255).to(torch.uint8).cpu()
     with open("output/image.ppm", "w") as f:
         f.write(f"P3\n{width} {height}\n255\n")
