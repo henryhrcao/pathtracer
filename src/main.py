@@ -31,7 +31,7 @@ def main():
     topLeftPixel = topLeft + 0.5*(deltaU+deltaV)
     pixelTensor = torch.empty(height,width,3)
     sphere1 = Sphere(torch.tensor([0,0,-1],device = device),0.5)
-    sphere2 = Sphere(torch.tensor([0.5,0.5,-1],device = device),0.25)
+    sphere2 = Sphere(torch.tensor([0,-100.5,-1],device = device),100)
     objectList = [sphere1,sphere2]
     for i in range(height):
         for j in range(width):
