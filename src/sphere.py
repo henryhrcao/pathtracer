@@ -1,9 +1,9 @@
 from object import *
 class Sphere(Object):
-    def __init__(self,center,radius):
+    def __init__(self, center, radius, colour, material):
         self.center = center
         self.radius = radius
-        super().__init__()
+        super().__init__(colour, material)
     def intersect(self, rays, origins):
         directions  = torch.nn.functional.normalize(rays, dim=-1)
         oc = origins - self.center.view(1, 1, 3)
