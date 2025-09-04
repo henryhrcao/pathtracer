@@ -1,6 +1,7 @@
 import torch
 from rays import *
 from sphere import *
+from plane import *
 from materials.metal import *
 from materials.light import *
 from materials.diffuse import *
@@ -33,12 +34,68 @@ def main():
     topLeft = cameraOrigin - torch.tensor([0,0,focalLength]) - u/2 -v/2
     topLeftPixel = topLeft + 0.5*(deltaU+deltaV)
     pixelTensor = torch.empty(height,width,3)
-    sphere1 = Sphere(torch.tensor([0,0,-1.3],device = device),0.5,torch.tensor([0.5, 0.5, 0.5], device=device), Diffuse())
-    sphere2 = Sphere(torch.tensor([0,-100.5,-1],device = device),100,torch.tensor([0.5, 1.0, 0.5], device=device), Diffuse())
-    sphere3 = Sphere(torch.tensor([1.2,-0.3,-1],device = device),0.25,torch.tensor([0.5, 0.5, 1.0], device=device), Metal(1))
-    sphere4 = Sphere(torch.tensor([-1.2,-0.1,-1],device = device),0.5,torch.tensor([1.0, 1.0, 1.0], device=device), Metal(2))
-    sphere5 = Sphere(torch.tensor([0,1.6,-0.5],device = device),0.33,torch.tensor([0.8, 0.8, 0.0], device=device), Light(30))
-    objectList = [sphere1,sphere2,sphere3,sphere4,sphere5]
+    # Left wall (red)
+    left_wall = Plane(
+        torch.tensor([[-1.0,-1.0,-1.0],[ -1.0,-1.0,-3.0],[ -1.0, 1.0,-3.0],[ -1.0, 1.0,-1.0]], device=device),
+        torch.tensor([0.8,0.0,0.0], device=device),
+        Diffuse()
+    )
+
+    # Right wall (green)
+    right_wall = Plane(
+        torch.tensor([[ 1.0,-1.0,-3.0],[ 1.0,-1.0,-1.0],[ 1.0, 1.0,-1.0],[ 1.0, 1.0,-3.0]], device=device),
+        torch.tensor([0.0,0.8,0.0], device=device),
+        Diffuse()
+    )
+
+    # Floor (white)
+    floor = Plane(
+        torch.tensor([[-1.0,-1.0,-1.0],[ 1.0,-1.0,-1.0],[ 1.0,-1.0,-3.0],[ -1.0,-1.0,-3.0]], device=device),
+        torch.tensor([0.8,0.8,0.8], device=device),
+        Diffuse()
+    )
+
+    # Ceiling (white)
+    ceiling = Plane(
+        torch.tensor([[-1.0, 1.0,-3.0],[ 1.0, 1.0,-3.0],[ 1.0, 1.0,-1.0],[ -1.0, 1.0,-1.0]], device=device),
+        torch.tensor([0.8,0.8,0.8], device=device),
+        Diffuse()
+    )
+
+    # Back wall (white)
+    back_wall = Plane(
+        torch.tensor([[-1.0,-1.0,-3.0],[ 1.0,-1.0,-3.0],[ 1.0, 1.0,-3.0],[ -1.0, 1.0,-3.0]], device=device),
+        torch.tensor([0.8,0.8,0.8], device=device),
+        Diffuse()
+    )
+
+    # Ceiling light (bright Plane)
+    light = Plane(
+        torch.tensor([[-0.3,0.999,-1.3],[ 0.3,0.999,-1.3],[ 0.3,0.999,-1.7],[ -0.3,0.999,-1.7]], device=device),
+        torch.tensor([1.0,1.0,1.0], device=device),
+        Light(1)
+    )
+
+    # --- Objects inside the box ---
+
+    # Diffuse sphere (left)
+    sphere1 = Sphere(
+        torch.tensor([-0.5,-0.5,-2.0], device=device),
+        0.5,
+        torch.tensor([0.8,0.8,0.8], device=device),
+        Diffuse()
+    )
+
+    # Glossy/metallic sphere (right)
+    sphere2 = Sphere(
+        torch.tensor([0.5,-0.5,-1.5], device=device),
+        0.5,
+        torch.tensor([0.9,0.9,0.9], device=device),
+        Metal(0.1)   # low fuzz = glossy
+    )
+
+    # Final scene object list
+    objectList = [left_wall, right_wall, floor, ceiling, back_wall, light, sphere1, sphere2]
     for i in range(height):
         for j in range(width):
             currentPixel = topLeftPixel + (i*deltaV) + (j*deltaU)
