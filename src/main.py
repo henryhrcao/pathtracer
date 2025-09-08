@@ -73,7 +73,7 @@ def main():
     light = Plane(
         torch.tensor([[-0.3,0.999,-1.3],[ 0.3,0.999,-1.3],[ 0.3,0.999,-1.7],[ -0.3,0.999,-1.7]], device=device),
         torch.tensor([1.0,1.0,1.0], device=device),
-        Light(1)
+        Light(5)
     )
 
     # --- Objects inside the box ---
@@ -91,7 +91,7 @@ def main():
         torch.tensor([0.5,-0.5,-1.5], device=device),
         0.5,
         torch.tensor([0.9,0.9,0.9], device=device),
-        Metal(0.1)   # low fuzz = glossy
+        Metal(0.5)   # low fuzz = glossy
     )
 
     # Final scene object list
@@ -109,7 +109,7 @@ def main():
     originTensor[:] = cameraOrigin
     rayTensor = pixelTensor - cameraOrigin
     colourTensor = torch.zeros((height, width, 3), device=device)
-    samples = 100
+    samples = 1000
     for i in range(samples):
         jitter = torch.rand(height, width, 2, device=device)
         jitteredPixel = topLeftPixel[None, None, :] + (torch.arange(height, device=device)[:, None, None] + jitter[..., 1:2]) * deltaV + (torch.arange(width, device=device)[None, :, None] + jitter[..., 0:1]) * deltaU

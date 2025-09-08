@@ -13,8 +13,8 @@ def colour(rays, device, origins, objects):
         randomTensor = torch.full((*rays.shape[:2], 3), 0.0, device=device)
         closestMaterial = torch.full((*rays.shape[:2], 2), 0.0, device=device) 
         for obj in objects:   
-            roots, points , normals = obj.intersect(rays, origins)
-            mask = (roots > 1e-4) & (roots < closest) 
+            roots, points , normals, mask = obj.intersect(rays, origins)
+            mask = mask & (roots > 1e-4) & (roots < closest) 
             closest = torch.where(mask, roots, closest)
             closestColours = torch.where(mask.unsqueeze(-1), obj.colour, closestColours)
             closestNormals = torch.where(mask.unsqueeze(-1), normals, closestNormals)
@@ -28,10 +28,12 @@ def colour(rays, device, origins, objects):
                     closestMaterial = torch.where(mask.unsqueeze(-1), torch.tensor([2, obj.material.emissive], device=device).expand_as(closestMaterial), closestMaterial)
         hitMask = closest < float("inf")
         if not ~hitMask.any():
-            a = 0.5 * (directions[:, :, 1] + 1)  
-            background = (1.0 - a)[:, :, None] * torch.tensor([1.0, 1.0, 1.0], device=device) + a[:, :, None] * torch.tensor([0.5, 0.7, 1.0], device=device)
+            #a = 0.5 * (directions[:, :, 1] + 1)  
+            #background = (1.0 - a)[:, :, None] * torch.tensor([1.0, 1.0, 1.0], device=device) + a[:, :, None] * torch.tensor([0.5, 0.7, 1.0], device=device)
+            background = torch.tensor([0,0,0], device=device)
             colours = colours + throughput * torch.where(hitMask[..., None], torch.zeros_like(background), background)
             throughput = torch.where(hitMask.unsqueeze(-1), throughput, torch.zeros_like(throughput))
+            pass
         randomTensor = torch.zeros_like(closestNormals)
         matType = closestMaterial[..., 0]
         diffuseMask = (matType == 0) & hitMask
@@ -49,12 +51,12 @@ def colour(rays, device, origins, objects):
         if lightMask.any():
             emissiveness = torch.where(lightMask.unsqueeze(-1), closestMaterial[..., 1:2], torch.zeros_like(closestMaterial[..., 1:2])) 
             closestLight = torch.where(lightMask.unsqueeze(-1), closestColours, torch.zeros_like(closestColours)) 
-            colours = colours + throughput * closestLight * emissiveness
             diffuse = torch.nn.functional.normalize(torch.randn_like(closestNormals), dim=-1)
             diffuse = diffuse + closestNormals
             randomTensor = torch.where(lightMask.unsqueeze(-1), diffuse, randomTensor)
-            absorption = 0.0
+            absorption = 0.1
             throughput = torch.where(lightMask.unsqueeze(-1), throughput * (1.0 - absorption), throughput)
+            colours = colours + throughput * closestLight * emissiveness
         origins = torch.where(hitMask.unsqueeze(-1), closestPoints + 1e-4 * closestNormals, origins)
         directions = randomTensor
         rays = directions  

@@ -21,4 +21,4 @@ class Sphere(Object):
         roots = torch.where(mask & (minroot>0),minroot,t)
         points = origins + directions * roots.unsqueeze(-1)
         normals = torch.nn.functional.normalize(points - self.center, dim=-1)
-        return roots, points, normals
+        return roots, points, normals, mask

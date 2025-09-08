@@ -10,6 +10,11 @@ class Plane(Object):
         if torch.sum(normal*self.points[0], dim=-1) != 0:
             t = (torch.sum(normal*self.points[0], dim=-1) - torch.sum(normal*origins, dim=-1)) / torch.sum(normal*directions, dim=-1)
             intersectPoints = origins + directions * t.unsqueeze(-1)
-            return t, intersectPoints, normal
+            tOne = torch.sum(normal * torch.linalg.cross((self.points[1]-self.points[0]).unsqueeze(0).expand_as(intersectPoints),((intersectPoints-self.points[0]))), dim=-1)
+            tTwo = torch.sum(normal * torch.linalg.cross((self.points[2]-self.points[1]).unsqueeze(0).expand_as(intersectPoints),((intersectPoints-self.points[1]))), dim=-1)
+            tThree = torch.sum(normal * torch.linalg.cross((self.points[3]-self.points[2]).unsqueeze(0).expand_as(intersectPoints),((intersectPoints-self.points[2]))), dim=-1)
+            tFour = torch.sum(normal * torch.linalg.cross((self.points[0]-self.points[3]).unsqueeze(0).expand_as(intersectPoints),((intersectPoints-self.points[3]))), dim=-1)
+            mask = (tOne >= 0) & (tTwo >= 0) & (tThree >= 0) & (tFour >= 0)
+            return t, intersectPoints, normal, mask
 
 
